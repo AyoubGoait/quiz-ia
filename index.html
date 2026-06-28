@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz IA — Quel est mon niveau ? — Génération digitAi</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --purple: #534AB7; --purple-light: #EEEDFE; --purple-dark: #3C3489;
+    --green-light: #EAF3DE; --green-dark: #085041; --green-mid: #27500A;
+    --amber-light: #FAEEDA; --amber-dark: #633806;
+    --red-light: #FCEBEB; --red-dark: #501313;
+    --teal: #1D9E75; --teal-light: #E1F5EE;
+    --text: #1A1A2E; --text-muted: #6B6B7B; --text-hint: #A0A0B0;
+    --bg: #F7F6FF; --surface: #FFFFFF;
+    --border: rgba(0,0,0,0.08); --border-hover: #AFA9EC;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  .top-bar { background: var(--purple); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { color: #fff; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .brand-sub { color: rgba(255,255,255,0.65); font-size: 12px; font-weight: 400; }
+
+  .hero { background: linear-gradient(135deg, var(--purple) 0%, #7F77DD 100%); padding: 40px 24px 52px; text-align: center; color: #fff; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.18); border-radius: 20px; padding: 5px 14px; font-size: 12px; margin-bottom: 16px; }
+  .hero h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+  .hero p { font-size: 14px; color: rgba(255,255,255,0.8); max-width: 460px; margin: 0 auto; }
+
+  .main { max-width: 680px; margin: -24px auto 0; padding: 0 16px 48px; }
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(83,74,183,0.06); }
+
+  .progress-wrap { margin-bottom: 20px; }
+  .progress-label { font-size: 12px; color: var(--text-muted); text-align: right; margin-bottom: 6px; }
+  .progress-bg { background: #E5E3F5; border-radius: 20px; height: 6px; overflow: hidden; }
+  .progress-fill { height: 6px; background: var(--purple); border-radius: 20px; transition: width .4s ease; }
+
+  .q-num { font-size: 11px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+  .q-text { font-size: 17px; font-weight: 600; line-height: 1.5; margin-bottom: 20px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt-btn {
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 13px 16px;
+    cursor: pointer; font-size: 14px; color: var(--text);
+    text-align: left; transition: all .15s; font-family: inherit;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .opt-btn:hover { border-color: var(--border-hover); background: var(--purple-light); }
+  .opt-btn.correct { border-color: var(--teal); background: var(--teal-light); color: var(--green-dark); }
+  .opt-btn.wrong { border-color: #E24B4A; background: var(--red-light); color: var(--red-dark); }
+  .opt-letter { width: 26px; height: 26px; border-radius: 50%; background: rgba(83,74,183,0.1); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--purple); flex-shrink: 0; }
+
+  .nav-btn { width: 100%; background: var(--purple); color: #fff; border: none; border-radius: var(--radius-sm); padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .15s; margin-top: 16px; font-family: inherit; }
+  .nav-btn:hover:not(:disabled) { background: var(--purple-dark); }
+  .nav-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* RÉSULTATS */
+  .result-top { text-align: center; padding: 28px 24px; }
+  .level-badge { display: inline-block; padding: 8px 24px; border-radius: 20px; font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+  .score-pts { font-size: 44px; font-weight: 700; color: var(--purple); }
+  .score-max { font-size: 18px; color: var(--text-muted); }
+  .score-label { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .stat-box { background: var(--bg); border-radius: var(--radius-sm); padding: 14px; text-align: center; border: 1px solid var(--border); }
+  .stat-val { font-size: 24px; font-weight: 700; color: var(--purple); }
+  .stat-lbl { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+  .roadmap-box { background: var(--bg); border-left: 3px solid var(--purple); border-radius: var(--radius-sm); padding: 16px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; }
+  .loading-wrap { text-align: center; padding: 24px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid rgba(83,74,183,0.2); border-top-color: var(--purple); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 10px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .restart-btn { width: 100%; background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 14px; cursor: pointer; color: var(--text-muted); font-family: inherit; transition: all .15s; }
+  .restart-btn:hover { background: var(--purple-light); color: var(--purple); border-color: var(--border-hover); }
+
+  .hidden { display: none !important; }
+
+  .footer { text-align: center; padding: 24px; font-size: 12px; color: var(--text-hint); border-top: 1px solid var(--border); }
+  .footer span { color: var(--purple); font-weight: 600; }
+
+  @media (max-width: 480px) {
+    .hero h1 { font-size: 20px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .card { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="brand"><i class="ti ti-brain"></i> Génération digitAi <span class="brand-sub">by Ayoub le GOAiT</span></div>
+  <div style="color:rgba(255,255,255,0.6);font-size:12px;">Portfolio Project #2</div>
+</div>
+
+<div class="hero">
+  <div class="hero-badge"><i class="ti ti-brain"></i> Quiz IA Interactif</div>
+  <h1>Quel est ton niveau en IA ?</h1>
+  <p>10 questions pour évaluer tes connaissances et recevoir ta feuille de route personnalisée</p>
+</div>
+
+<div class="main">
+
+  <!-- QUIZ -->
+  <div id="quiz-screen">
+    <div class="progress-wrap">
+      <div class="progress-label" id="prog-label">Question 1 / 10</div>
+      <div class="progress-bg"><div class="progress-fill" id="prog-fill" style="width:10%"></div></div>
+    </div>
+    <div class="card">
+      <div class="q-num" id="q-num">Question 1</div>
+      <div class="q-text" id="q-text"></div>
+      <div class="options" id="q-opts"></div>
+      <button class="nav-btn" id="next-btn" onclick="nextQ()" disabled>Continuer →</button>
+    </div>
+  </div>
+
+  <!-- RÉSULTATS -->
+  <div id="result-screen" class="hidden">
+    <div class="card">
+      <div class="result-top">
+        <div class="level-badge" id="level-badge"></div>
+        <div><span class="score-pts" id="score-pts">0</span><span class="score-max" id="score-max"> / 0 pts</span></div>
+        <div class="score-label">Score obtenu sur le quiz</div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-val" id="s-correct">0</div><div class="stat-lbl">✅ Bonnes réponses</div></div>
+      <div class="stat-box"><div class="stat-val" id="s-wrong">0</div><div class="stat-lbl">❌ À retravailler</div></div>
+      <div class="stat-box"><div class="stat-val" id="s-pct">0%</div><div class="stat-lbl">📊 Score global</div></div>
+    </div>
+
+    <div class="card">
+      <div class="step-label" style="font-size:13px;font-weight:700;color:var(--purple);display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+        <i class="ti ti-map"></i> Ta feuille de route personnalisée
+      </div>
+      <div id="loading-wrap" class="loading-wrap">
+        <div class="spinner"></div>
+        <p style="font-size:13px;color:var(--text-muted);">L'IA analyse ton profil…</p>
+      </div>
+      <div class="roadmap-box hidden" id="roadmap-text"></div>
+    </div>
+
+    <button class="restart-btn" onclick="restart()"><i class="ti ti-refresh"></i> Refaire le quiz</button>
+  </div>
+
+</div>
+
+<div class="footer">
+  Créé avec <span>Génération digitAi</span> — Formation IA pour les jeunes d'Afrique francophone<br>
+  Projet portfolio — Claude API (Anthropic) × JavaScript
+</div>
+
+<script>
+const QUESTIONS = [
+  { text: "Qu'est-ce que l'IA (Intelligence Artificielle) ?", opts: ["Un robot humanoïde physique","Un programme informatique qui imite certaines capacités humaines","Un réseau de câbles internet sous-marins","Un logiciel de comptabilité avancé"], correct: 1, points: 1 },
+  { text: "Parmi ces outils, lequel est une IA conversationnelle que tu peux utiliser gratuitement ?", opts: ["Microsoft Word","ChatGPT","Adobe Photoshop","Google Maps"], correct: 1, points: 1 },
+  { text: "Un 'prompt', c'est quoi en IA ?", opts: ["Un abonnement payant à un outil IA","Une instruction ou question que tu écris à l'IA","Un type de connexion internet rapide","Un format de fichier vidéo"], correct: 1, points: 1 },
+  { text: "Tu veux demander à ChatGPT de t'aider à rédiger un email professionnel. Quelle approche donne les meilleurs résultats ?", opts: ["Écrire juste 'email professionnel'","Décrire précisément ton contexte, le destinataire, et le but de l'email","Copier-coller un ancien email sans explication","Demander en anglais même si tu veux du français"], correct: 1, points: 2 },
+  { text: "Claude, ChatGPT et Gemini sont tous des exemples de :", opts: ["Réseaux sociaux professionnels","Logiciels de montage vidéo","LLM — Grands Modèles de Langage","Applications de paiement mobile"], correct: 2, points: 2 },
+  { text: "L'IA peut-elle se tromper dans ses réponses ?", opts: ["Non, l'IA est toujours exacte à 100%","Oui, il faut toujours vérifier les informations importantes","Seulement quand on lui pose des questions en français","Non, si on paie un abonnement premium"], correct: 1, points: 1 },
+  { text: "Qu'est-ce qu'une 'hallucination' dans le contexte de l'IA ?", opts: ["Quand l'IA génère des images psychédéliques","Quand l'IA invente des informations fausses présentées comme vraies","Un problème de connexion internet","Une fonctionnalité premium de ChatGPT"], correct: 1, points: 2 },
+  { text: "Laquelle de ces tâches est la plus adaptée à l'IA générative aujourd'hui ?", opts: ["Conduire une voiture en ville","Rédiger un premier brouillon d'un business plan","Réparer un ordinateur physiquement","Faire de la comptabilité légale officielle sans vérification"], correct: 1, points: 2 },
+  { text: "Tu veux créer une image avec l'IA. Quel outil utilises-tu ?", opts: ["ChatGPT version gratuite de base","Excel","Midjourney, DALL-E ou Leonardo AI","Google Translate"], correct: 2, points: 2 },
+  { text: "Qu'est-ce qu'une API dans le contexte de l'IA ?", opts: ["Une application de photographie","Un pont qui permet à deux logiciels de communiquer","Un type de formation en ligne","Une marque d'ordinateur africaine"], correct: 1, points: 2 }
+];
+
+let current = 0, score = 0, selected = null, answers = [];
+const MAX = QUESTIONS.reduce((s,q) => s+q.points, 0);
+
+function renderQ() {
+  const q = QUESTIONS[current];
+  document.getElementById('q-num').textContent = `Question ${current+1}`;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('prog-label').textContent = `Question ${current+1} / ${QUESTIONS.length}`;
+  document.getElementById('prog-fill').style.width = `${((current+1)/QUESTIONS.length)*100}%`;
+  const L = ['A','B','C','D'];
+  document.getElementById('q-opts').innerHTML = q.opts.map((o,i) =>
+    `<button class="opt-btn" onclick="selectOpt(${i})" id="opt-${i}"><span class="opt-letter">${L[i]}</span>${o}</button>`
+  ).join('');
+  selected = null;
+  document.getElementById('next-btn').disabled = true;
+  document.getElementById('next-btn').textContent = current < QUESTIONS.length-1 ? 'Continuer →' : 'Voir mes résultats →';
+}
+
+function selectOpt(idx) {
+  if (selected !== null) return;
+  selected = idx;
+  const q = QUESTIONS[current];
+  answers.push({q:current, selected:idx, correct:q.correct});
+  document.querySelectorAll('.opt-btn').forEach((b,i) => {
+    if (i === q.correct) b.classList.add('correct');
+    else if (i === idx && idx !== q.correct) b.classList.add('wrong');
+    b.style.cursor = 'default';
+  });
+  if (idx === q.correct) score += q.points;
+  document.getElementById('next-btn').disabled = false;
+}
+
+function nextQ() {
+  current++;
+  if (current >= QUESTIONS.length) showResults();
+  else renderQ();
+}
+
+function getLevel(pct) {
+  if (pct < 40) return { label:'🌱 Niveau Débutante', bg:'#EAF3DE', color:'#27500A' };
+  if (pct < 70) return { label:'📈 Niveau En Progression', bg:'#FAEEDA', color:'#633806' };
+  return { label:'🚀 Niveau Intermédiaire', bg:'#EEEDFE', color:'#3C3489' };
+}
+
+async function showResults() {
+  document.getElementById('quiz-screen').classList.add('hidden');
+  document.getElementById('result-screen').classList.remove('hidden');
+  const pct = Math.round((score/MAX)*100);
+  const correct = answers.filter(a => a.selected === a.correct).length;
+  const wrong = QUESTIONS.length - correct;
+  const lvl = getLevel(pct);
+
+  const badge = document.getElementById('level-badge');
+  badge.textContent = lvl.label;
+  badge.style.background = lvl.bg;
+  badge.style.color = lvl.color;
+
+  document.getElementById('score-pts').textContent = score;
+  document.getElementById('score-max').textContent = ` / ${MAX} pts`;
+  document.getElementById('s-correct').textContent = correct;
+  document.getElementById('s-wrong').textContent = wrong;
+  document.getElementById('s-pct').textContent = pct+'%';
+
+  const missed = answers.filter(a => a.selected !== a.correct).map(a => QUESTIONS[a.q].text).join(', ');
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:500,
+        system:'Tu es un expert en formation IA pour l\'Afrique francophone. Tu génères des feuilles de route pédagogiques courtes, motivantes et pratiques.',
+        messages:[{role:'user',content:`Une femme africaine vient de faire un quiz sur l'IA. Score : ${pct}%, ${correct} bonnes réponses sur ${QUESTIONS.length}. Questions ratées : ${missed||'aucune'}.\n\nGénère une feuille de route personnalisée avec : une phrase d'encouragement, 3 priorités d'apprentissage avec des outils gratuits, et un premier pas concret à faire dans les 24h. Contexte africain francophone. Format texte simple.`}]
+      })
+    });
+    const data = await res.json();
+    document.getElementById('loading-wrap').classList.add('hidden');
+    const rt = document.getElementById('roadmap-text');
+    rt.classList.remove('hidden');
+    rt.textContent = data.content[0].text;
+  } catch(e) {
+    document.getElementById('loading-wrap').classList.add('hidden');
+    const rt = document.getElementById('roadmap-text');
+    rt.classList.remove('hidden');
+    rt.textContent = 'Continue ta progression ! Commence par explorer ChatGPT ou Claude gratuitement aujourd\'hui.';
+  }
+}
+
+function restart() {
+  current=0; score=0; selected=null; answers=[];
+  document.getElementById('result-screen').classList.add('hidden');
+  document.getElementById('quiz-screen').classList.remove('hidden');
+  document.getElementById('loading-wrap').classList.remove('hidden');
+  document.getElementById('roadmap-text').classList.add('hidden');
+  renderQ();
+}
+
+renderQ();
+</script>
+</body>
+</html>
